@@ -48,10 +48,6 @@
         <!-- Agendamentos serão inseridos aqui -->
       </tbody>
     </table>
-  </div>
-  <script src="script.js"></script>
-</body>
-</html>
 document.getElementById('agendamentoForm').addEventListener('submit', function(e) {
   e.preventDefault();
 
@@ -87,6 +83,8 @@ function adicionarAgendamentoNaTabela(agendamento) {
 
   tabela.appendChild(linha);
 }
+
+  </div>
 body {
   font-family: Arial, sans-serif;
   background-color: #f4f4f4;
@@ -162,3 +160,7 @@ th {
 td {
   background-color: #f9f9f9;
 }
+
+  <script src="script.js"></script>
+</body>
+</html>
