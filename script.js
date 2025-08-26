@@ -40,3 +40,53 @@ function marcarPresenca(botao) {
   botao.disabled = true;
   botao.classList.add("presenca-confirmada");
 }
+const horariosDisponiveis = [
+  "09:00", "09:15", "09:30", "09:45", "10:00", "10:15", "10:30", "10:45", "11:00" 
+  "14:30", "14:45", "15:00", "15:15", "15:30", "15:45" "16:00", "16:15"
+];
+
+let agendamentos = [];
+
+function atualizarHorarios() {
+  const dataSelecionada = document.getElementById('data').value;
+  const selectHora = document.getElementById('hora');
+  selectHora.innerHTML = "";
+
+  const ocupados = agendamentos
+    .filter(a => a.data === dataSelecionada)
+    .map(a => a.hora);
+
+  const livres = horariosDisponiveis.filter(h => !ocupados.includes(h));
+
+  livres.forEach(hora => {
+    const option = document.createElement('option');
+    option.value = hora;
+    option.textContent = hora;
+    selectHora.appendChild(option);
+  });
+}
+
+document.getElementById('data').addEventListener('change', atualizarHorarios);
+
+document.getElementById('agendamentoForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+
+  const nome = document.getElementById('nome').value;
+  const cpf = document.getElementById('cpf').value;
+  const servico = document.getElementById('servico').value;
+  const data = document.getElementById('data').value;
+  const hora = document.getElementById('hora').value;
+
+  if (!nome || !cpf || !servico || !data || !hora) {
+    document.getElementById('mensagem').textContent = 'Preencha todos os campos!';
+    return;
+  }
+
+  agendamentos.push({ nome, cpf, servico, data, hora });
+
+  document.getElementById('mensagem').textContent = `Serviço agendado com sucesso para ${data} às ${hora}!`;
+
+  adicionarAgendamentoNaTabela({ nome, cpf, servico, data, hora });
+  atualizarHorarios();
+  this.reset();
+});
