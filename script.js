@@ -29,7 +29,14 @@ function adicionarAgendamentoNaTabela(agendamento) {
     <td>${agendamento.servico}</td>
     <td>${agendamento.data}</td>
     <td>${agendamento.hora}</td>
+    <td><button onclick="marcarPresenca(this)">Marcar Presença</button></td>
   `;
 
   tabela.appendChild(linha);
+}
+
+function marcarPresenca(botao) {
+  botao.textContent = "Presença Confirmada";
+  botao.disabled = true;
+  botao.classList.add("presenca-confirmada");
 }
