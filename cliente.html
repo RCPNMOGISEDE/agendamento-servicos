@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Agendamento - RCPNMOGISEDE</title>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<style>
+body { font-family: Arial, sans-serif; padding:20px;}
+form { margin-bottom:20px; }
+label { display:block; margin-top:10px; font-weight:bold; }
+input, select { padding:5px; width:100%; max-width:300px; }
+button { margin-top:15px; padding:10px; cursor:pointer; }
+#comprovante { border:1px solid #000; padding:15px; margin-top:20px; display:none; }
+</style>
+</head>
+<body>
+<h1>📌 Agendamento - RCPNMOGISEDE</h1>
+<form id="formAgendamento">
+<label>Nome:</label>
+<input type="text" id="nome" required>
+<label>Data:</label>
+<input type="date" id="data" required>
+<label>Hora:</label>
+<select id="hora" required>
+<option value="">Selecione uma data primeiro</option>
+</select>
+<label>Serviço:</label>
+<select id="servico" required>
+<option value="">Selecione</option>
+<option value="Reconhecimento de Firma">Reconhecimento de Firma</option>
+<option value="Cópia Autenticada">Cópia Autenticada</option>
+<option value="E-Notariado">E-Notariado</option>
+</select>
+<button type="submit">Agendar</button>
+</form>
+<div id="comprovante">
+<h3>✅ Comprovante de Agendamento</h3>
+<p><b>Nome:</b> <span id="compNome"></span></p>
+<p><b>Data:</b> <span id="compData"></span></p>
+<p><b>Hora:</b> <span id="compHora"></span></p>
+<p><b>Serviço:</b> <span id="compServico"></span></p>
+<p><b>Código:</b> <span id="compCodigo"></span></p>
+<button onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
+</div>
+<script>
+var firebaseConfig = {
+  apiKey: "AIzaSyCdORE6eRrqKsmXgWT1MsF2qsr5gR-nscg",
+  authDomain: "rcpnmogisede-5aefa.firebaseapp.com",
+  databaseURL: "https://rcpnmogisede-5aefa-default-rtdb.firebaseio.com",
+  projectId: "rcpnmogisede-5aefa",
+  storageBucket: "rcpnmogisede-5aefa.firebasestorage.app",
+  messagingSenderId: "1033244044046",
+  appId: "1:1033244044046:web:9c097f33ffbad58ae6455f",
+  measurementId: "G-KE3GZC0X9L"
+};
+firebase.initializeApp(firebaseConfig);
+var db = firebase.database();
+var dataInput = document.getElementById("data");
+var horaSelect = document.getElementById("hora");
+var form = document.getElementById("formAgendamento");
+function gerarHorariosDisponiveis(agendamentosDia, servico){
+  var horarios = [];
+  var hora = 9, minuto = 0;
+  while(hora<17 || (hora===16 && minuto<=45)){
+    var h = hora.toString().padStart(2,'0');
+    var m = minuto.toString().padStart(2,'0');
+    var horario = h+":"+m;
+    if(agendamentosDia.indexOf(horario+"|"+servico)===-1){
+      horarios.push(horario);
+    }
+    minuto += 15;
+    if(minuto>=60){ minuto=0; hora++; }
+  }
+  return horarios;
+}
+dataInput.addEventListener("change", atualizarHoras);
+document.getElementById("servico").addEventListener("change", atualizarHoras);
+function atualizarHoras(){
+  var dataSelecionada = dataInput.value;
+  var servicoSelecionado = document.getElementById("servico").value;
+  if(!dataSelecionada || !servicoSelecionado) return;
+  db.ref('agendamentos').orderByChild('data').equalTo(dataSelecionada)
+    .once('value', snapshot=>{
+      var ocupados = [];
+      snapshot.forEach(child=>{
+        var ag = child.val();
+        if(ag.hora && ag.servico) ocupados.push(ag.hora+"|"+ag.servico);
+      });
+      var horariosDisponiveis = gerarHorariosDisponiveis(ocupados, servicoSelecionado);
+      if(horariosDisponiveis.length>0){
+        horaSelect.innerHTML = horariosDisponiveis.map(h=>`<option value="${h}">${h}</option>`).join('');
+      } else {
+        horaSelect.innerHTML = '<option value="">Sem horários disponíveis</option>';
+      }
+    });
+}
+form.addEventListener("submit", function(e){
+  e.preventDefault();
+  var novoAgendamento = {
+    nome: document.getElementById("nome").value,
+    data: document.getElementById("data").value,
+    hora: document.getElementById("hora").value,
+    servico: document.getElementById("servico").value,
+    presenca: false
+  };
+  var agRef = db.ref('agendamentos').push();
+  agRef.set(novoAgendamento, function(){
+    document.getElementById("compNome").innerText = novoAgendamento.nome;
+    document.getElementById("compData").innerText = novoAgendamento.data;
+    document.getElementById("compHora").innerText = novoAgendamento.hora;
+    document.getElementById("compServico").innerText = novoAgendamento.servico;
+    document.getElementById("compCodigo").innerText = agRef.key;
+    document.getElementById("comprovante").style.display="block";
+    form.reset();
+    horaSelect.innerHTML='<option value="">Selecione uma data primeiro</option>';
+  });
+});
+</script>
+</body>
+</html>
