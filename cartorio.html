@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Painel do Cartório - RCPNMOGISEDE</title>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<style>
+body { font-family: Arial, sans-serif; padding:20px; background:#f8fafc;}
+h1 { color:#2c3e50; margin:0; }
+table { width:100%; border-collapse: collapse; margin-top:20px; background:#fff; }
+th, td { border:1px solid #ccc; padding:8px; text-align:left; }
+th { background:#f4f4f4; }
+.presente { background-color:#d4edda; color:#155724; font-weight:bold; }
+.ausente { background-color:#f8d7da; color:#721c24; font-weight:bold; }
+button { padding:5px 10px; margin:2px; cursor:pointer; border-radius:5px; border:none; }
+button.presenca { background:#28a745; color:#fff; }
+button.remover { background:#dc3545; color:#fff; }
+.top-bar { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+</style>
+</head>
+<body>
+<div class="top-bar">
+<h1>📋 Painel do Cartório - RCPNMOGISEDE</h1>
+<button onclick="window.print()">🖨️ Imprimir Lista</button>
+</div>
+<table id="tabelaAgendamentos">
+<thead>
+<tr>
+<th>Data</th>
+<th>Nome</th>
+<th>Hora</th>
+<th>Serviço</th>
+<th>Presença</th>
+<th>Ação</th>
+</tr>
+</thead>
+<tbody>
+<tr><td colspan="6">Carregando agendamentos...</td></tr>
+</tbody>
+</table>
+<script>
+var firebaseConfig = {
+  apiKey: "AIzaSyCdORE6eRrqKsmXgWT1MsF2qsr5gR-nscg",
+  authDomain: "rcpnmogisede-5aefa.firebaseapp.com",
+  databaseURL: "https://rcpnmogisede-5aefa-default-rtdb.firebaseio.com",
+  projectId: "rcpnmogisede-5aefa",
+  storageBucket: "rcpnmogisede-5aefa.firebasestorage.app",
+  messagingSenderId: "1033244044046",
+  appId: "1:1033244044046:web:9c097f33ffbad58ae6455f",
+  measurementId: "G-KE3GZC0X9L"
+};
+firebase.initializeApp(firebaseConfig);
+var db = firebase.database();
+var tabelaBody = document.querySelector("#tabelaAgendamentos tbody");
+function atualizarTabela(){
+  db.ref('agendamentos').on('value', snapshot=>{
+    tabelaBody.innerHTML = "";
+    if(!snapshot.exists()){
+      tabelaBody.innerHTML = "<tr><td colspan='6'>Nenhum agendamento cadastrado</td></tr>";
+      return;
+    }
+    snapshot.forEach(child=>{
+      var ag = child.val();
+      var id = child.key;
+      var nome = ag.nome||'';
+      var data = ag.data||'';
+      var hora = ag.hora||'';
+      var servico = ag.servico||'';
+      var presenca = ag.presenca||false;
+      var tr = document.createElement("tr");
+      tr.className = presenca ? "presente" : "ausente";
+      tr.innerHTML = `<td>${data}</td><td>${nome}</td><td>${hora}</td><td>${servico}</td>
+      <td>${presenca ? '✔️ Presente' : '❌ Ausente'}</td>
+      <td>${!presenca? `<button class='presenca' onclick="marcarPresenca('${id}')">Marcar Presença</button>`: ''}
+      <button class='remover' onclick="removerAgendamento('${id}')">Remover</button></td>`;
+      tabelaBody.appendChild(tr);
+    });
+  });
+}
+function marcarPresenca(id){ db.ref('agendamentos/'+id).update({presenca:true}); }
+function removerAgendamento(id){ if(confirm("Tem certeza que deseja remover este agendamento?")){ db.ref('agendamentos/'+id).remove(); } }
+atualizarTabela();
+</script>
+</body>
+</html>
